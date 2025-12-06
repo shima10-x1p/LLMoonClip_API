@@ -100,6 +100,54 @@ uv run fastapi dev app/main.py
 - `infrastructure` → `domain`
 - **ドメイン層は他の層に依存しない**
 
+### リクエスト処理フロー
+
+APIがリクエストを受信してからレスポンスを返すまでの詳細なフローは以下の通りです。
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Client as Client
+    participant Main as Main (FastAPI)
+    participant Router as Router (Presentation)
+    participant Dep as Dependencies (DI)
+    participant UC as UseCase (Application)
+    participant Repo as Repository (Infrastructure)
+    participant DB as Database
+
+    Note over Client, DB: 例: LLM応答の作成 (POST /responses)
+
+    Client->>Main: HTTP Request
+    Main->>Router: Route Request to Endpoint
+    
+    %% Dependency Injection
+    Router->>Dep: get_llm_response_repository()
+    Dep->>DB: get_db() (Session)
+    Dep-->>Router: RepositoryImpl Instance
+
+    %% Use Case Execution
+    Router->>UC: Instantiate UseCase(repository)
+    Router->>UC: execute(input_data)
+    
+    %% Domain Logic
+    UC->>UC: Create Domain Entity
+    UC->>Repo: create(domain_entity)
+    
+    %% Persistence
+    Repo->>Repo: _to_orm(domain_entity)
+    Repo->>DB: add(orm_model)
+    Repo->>DB: commit()
+    Repo->>DB: refresh()
+    DB-->>Repo: Persisted Data
+    Repo->>Repo: _to_domain(orm_model)
+    Repo-->>UC: Return Domain Entity
+    
+    %% Response
+    UC-->>Router: Return Domain Entity
+    Router-->>Main: Return Response Model (Pydantic)
+    Main-->>Client: HTTP Response (JSON)
+```
+
 ## 開発
 
 ### コードフォーマット
