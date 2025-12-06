@@ -43,3 +43,12 @@ known-first-party = ["llmoonclip-api"]
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI の Depends はデフォルト引数に書いても安全なものとして扱う
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Body",
+    "fastapi.Path",
+]
