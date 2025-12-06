@@ -167,7 +167,3 @@ uv run ruff check app
 ```bash
 uv run pytest
 ```
-
-## ライセンス
-
-このプロジェクトはMITライセンスの下で公開されています。
